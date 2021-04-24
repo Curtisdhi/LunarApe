@@ -1,2 +1,3 @@
 .env
 apebot-env/
+__pycache__/
