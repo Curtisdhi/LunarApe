@@ -1,4 +1,5 @@
 import os
+import textwrap
 import discord
 from discord.ext import commands
 from async_timeout import timeout
@@ -37,19 +38,23 @@ class Stonk(commands.Cog):
         gain_sym = "+" if quote.gain > 0 else "-"
 
         embed = discord.Embed(
-            title=quote.ticker,
-            description="Stonking information" if quote.ticker != "GME" else "APES HODL TIL PAST THE MOON!!",
+            title=quote.symbol +" - "+ quote.longName,
+            description="{}\n{}".format(
+                "**Stonking information**" if quote.symbol != "GME" else "APES HODL TIL PAST THE MOON!!", 
+                textwrap.shorten(quote.longBusinessSummary, width=100)
+            ),
             color=discord.Color.blurple(),
-            url="https://finance.yahoo.com/quote/{}".format(quote.ticker)
+            url="https://finance.yahoo.com/quote/{}".format(quote.symbol)
         )
 
-        embed.set_thumbnail(url="https://eodhistoricaldata.com/img/logos/US/{}.png".format(quote.ticker))
+        embed.set_thumbnail(url=quote.logo_url)
 
-        embed.add_field(name="Current",  value="```diff\n${0:,.2f}\n```".format(quote.current),             inline=False)
-        embed.add_field(name="Gain",     value="```diff\n{2}${0:,.2f}\n{2}{1:,.2f}%\n```".format(abs(quote.gain), abs(quote.gainPercent), gain_sym), inline=True)
-        embed.add_field(name="Previous", value="```diff\n${0:,.2f}\n```".format(quote.previous),            inline=True)
-        embed.add_field(name="Open",     value="```diff\n${0:,.2f}\n```".format(quote.open),                inline=True)
-        embed.add_field(name="High",     value="```diff\n${0:,.2f}\n```".format(quote.high),                inline=True)
-        embed.add_field(name="Low",      value="```diff\n${0:,.2f}\n```".format(quote.low),                 inline=True)
+        embed.add_field(name="Current",  value="```diff\n${0:,.2f}\n```".format(quote.bid),                    inline=False)
+        embed.add_field(name="Gain",     value="```diff\n{2}${0:,.2f}\n{2}{1:,.2f}%\n```".format(abs(quote.gain), abs(quote.gainPercent * 100), gain_sym), inline=True)
+        embed.add_field(name="Previous", value="```diff\n${0:,.2f}\n```".format(quote.previousClose),          inline=True)
+        embed.add_field(name="Open",     value="```diff\n${0:,.2f}\n```".format(quote.regularMarketOpen),      inline=True)
+        embed.add_field(name="High",     value="```diff\n${0:,.2f}\n```".format(quote.dayHigh),                inline=True)
+        embed.add_field(name="Low",      value="```diff\n${0:,.2f}\n```".format(quote.dayLow),                 inline=True)
+        embed.add_field(name="Short Ratio", value="```diff\n{0:,.1f}%\n```".format(quote.shortRatio * 100),      inline=True)
 
         return embed

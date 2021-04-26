@@ -1,50 +1,27 @@
 import os
-import http.client
 import json
+import requests
+import yfinance as yf
 
 class StockApi:
 
     def __init__(self):
-        self.token = os.getenv('STOCKAPI_TOKEN')
-    
-
-    def getHttpResponse(self, url: str):
-        conn = http.client.HTTPSConnection("finnhub.io")
-
-        headers = {
-            "Content-type": "application/json",
-            "X-Finnhub-Token": self.token
-        }
-        data = "{}"
-        try:
-            conn.request("GET", url, headers=headers)
-            res = conn.getresponse()
-            data = res.read().decode("utf-8")
-            
-        except http.client.HTTPException as e:
-            print("failed to get response from {}. \n error: {}".format(url, e.message))
-        finally:
-            conn.close()
-
-        return json.loads(data)
+        self._session = requests.Session()
+        self._session.headers['User-Agent'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0" 
 
     def getQuotes(self, quotes: tuple):
         data = []
-        for q in quotes:
-            url = "/api/v1/quote?symbol="+ q.strip().upper()
-            d = self.getHttpResponse(url)
-            data.append(Quote(q, d["c"], d["h"], d["l"], d["pc"], d["o"]))
 
+        for q in quotes:
+            q = q.strip().upper()
+            ticker = yf.Ticker(q, self._session)
+            data.append(Quote(**ticker.info))
         return data
 
 
 class Quote:
-    def __init__(self, ticker, current, high, low, previous, open):
-        self.ticker = ticker
-        self.current = current
-        self.high = high
-        self.low = low
-        self.previous = previous
-        self.open = open
-        self.gain = round(current - previous, 2)
-        self.gainPercent = round(1 - (previous / current), 2)
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+        self.gain = round(self.bid - self.previousClose, 2)
+        self.gainPercent = round(1 - (self.previousClose / self.bid), 4)
+

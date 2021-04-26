@@ -2,3 +2,4 @@ python-dotenv==0.17.0
 async_timeout==3.0.1
 discord==1.0.1
 discord.py==1.7.1
+yfinance==0.1.59
