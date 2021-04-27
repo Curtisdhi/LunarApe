@@ -1,4 +1,5 @@
 import os
+import sys
 import asyncio
 import discord
 
@@ -7,7 +8,11 @@ from dotenv import load_dotenv
 from stonk import Stonk
 
 load_dotenv()
-token = os.getenv('DISCORD_TOKEN')
+
+if len(sys.argv) > 1 and sys.argv[1].strip().lower() == 'prod':
+    token = os.getenv('DISCORD_TOKEN') 
+else:
+    token = os.getenv('DEV_DISCORD_TOKEN')
 
 client = commands.Bot(command_prefix=commands.when_mentioned_or("$"),
                    description='Apes to the moon!')

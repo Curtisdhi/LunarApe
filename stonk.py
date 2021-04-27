@@ -31,8 +31,11 @@ class Stonk(commands.Cog):
     async def quote(self, ctx, *stonkSymbols):
         quotes = self.api.getQuotes(stonkSymbols)
 
-        for quote in quotes:
-            await ctx.send(embed=self.createQuoteEmbed(quote))
+        for sym in quotes:
+            if (quotes[sym] == None):
+                await ctx.send("Unable to find symbol: {}".format(sym))
+            else:
+                await ctx.send(embed=self.createQuoteEmbed(quotes[sym]))
 
     def createQuoteEmbed(self, quote):
         gain_sym = "+" if quote.gain > 0 else "-"
@@ -49,12 +52,14 @@ class Stonk(commands.Cog):
 
         embed.set_thumbnail(url=quote.logo_url)
 
-        embed.add_field(name="Current",  value="```diff\n${0:,.2f}\n```".format(quote.bid),                    inline=False)
-        embed.add_field(name="Gain",     value="```diff\n{2}${0:,.2f}\n{2}{1:,.2f}%\n```".format(abs(quote.gain), abs(quote.gainPercent * 100), gain_sym), inline=True)
-        embed.add_field(name="Previous", value="```diff\n${0:,.2f}\n```".format(quote.previousClose),          inline=True)
-        embed.add_field(name="Open",     value="```diff\n${0:,.2f}\n```".format(quote.regularMarketOpen),      inline=True)
-        embed.add_field(name="High",     value="```diff\n${0:,.2f}\n```".format(quote.dayHigh),                inline=True)
-        embed.add_field(name="Low",      value="```diff\n${0:,.2f}\n```".format(quote.dayLow),                 inline=True)
+        width = 2 if (quote.bid > 1) else 6
+
+        embed.add_field(name="Current",  value="```diff\n${0:,.{width}f}\n```".format(quote.bid, width=width),                    inline=False)
+        embed.add_field(name="Gain",     value="```diff\n{2}${0:,.{width}f}  {2}{1:,.2f}%\n```".format(abs(quote.gain), abs(quote.gainPercent * 100), gain_sym, width=width), inline=True)
+        embed.add_field(name="Previous", value="```diff\n${0:,.{width}f}\n```".format(quote.previousClose, width=width),          inline=True)
+        embed.add_field(name="Open",     value="```diff\n${0:,.{width}f}\n```".format(quote.regularMarketOpen, width=width),      inline=True)
+        embed.add_field(name="High",     value="```diff\n${0:,.{width}f}\n```".format(quote.dayHigh, width=width),                inline=True)
+        embed.add_field(name="Low",      value="```diff\n${0:,.{width}f}\n```".format(quote.dayLow, width=width),                 inline=True)
         if hasattr(quote, 'shortRatio') and quote.shortRatio != None:
             embed.add_field(name="Short Ratio", value="```diff\n{0:,.1f}%\n```".format(quote.shortRatio * 100),      inline=True)
 
