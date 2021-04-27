@@ -55,7 +55,7 @@ class Stonk(commands.Cog):
         embed.add_field(name="Open",     value="```diff\n${0:,.2f}\n```".format(quote.regularMarketOpen),      inline=True)
         embed.add_field(name="High",     value="```diff\n${0:,.2f}\n```".format(quote.dayHigh),                inline=True)
         embed.add_field(name="Low",      value="```diff\n${0:,.2f}\n```".format(quote.dayLow),                 inline=True)
-        if hasattr(quote, 'shortRatio'):
+        if hasattr(quote, 'shortRatio') and quote.shortRatio != None:
             embed.add_field(name="Short Ratio", value="```diff\n{0:,.1f}%\n```".format(quote.shortRatio * 100),      inline=True)
 
         return embed
