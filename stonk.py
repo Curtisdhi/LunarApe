@@ -38,10 +38,10 @@ class Stonk(commands.Cog):
         gain_sym = "+" if quote.gain > 0 else "-"
 
         embed = discord.Embed(
-            title=quote.symbol +" - "+ quote.longName,
+            title=quote.symbol +" - "+ quote.name,
             description="{}\n{}".format(
-                "**Stonking information**" if quote.symbol != "GME" else "APES HODL TIL PAST THE MOON!!", 
-                textwrap.shorten(quote.longBusinessSummary, width=100)
+                "**Stonking information**" if quote.symbol != "GME" else "**APES HODL TIL PAST THE MOON!!**", 
+                textwrap.shorten(quote.description, width=100)
             ),
             color=discord.Color.blurple(),
             url="https://finance.yahoo.com/quote/{}".format(quote.symbol)
@@ -55,6 +55,7 @@ class Stonk(commands.Cog):
         embed.add_field(name="Open",     value="```diff\n${0:,.2f}\n```".format(quote.regularMarketOpen),      inline=True)
         embed.add_field(name="High",     value="```diff\n${0:,.2f}\n```".format(quote.dayHigh),                inline=True)
         embed.add_field(name="Low",      value="```diff\n${0:,.2f}\n```".format(quote.dayLow),                 inline=True)
-        embed.add_field(name="Short Ratio", value="```diff\n{0:,.1f}%\n```".format(quote.shortRatio * 100),      inline=True)
+        if hasattr(quote, 'shortRatio'):
+            embed.add_field(name="Short Ratio", value="```diff\n{0:,.1f}%\n```".format(quote.shortRatio * 100),      inline=True)
 
         return embed

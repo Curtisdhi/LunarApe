@@ -22,6 +22,11 @@ class StockApi:
 class Quote:
     def __init__(self, **entries):
         self.__dict__.update(entries)
+        self.bid = self.bid if self.bid != None else self.regularMarketPrice
+        if self.name is None:
+            self.name = self.longName if self.longName != None else self.shortName
+        if self.description is None:
+            self.description = self.longBusinessSummary if self.longBusinessSummary != None else self.shortBusinessSummary
         self.gain = round(self.bid - self.previousClose, 2)
         self.gainPercent = round(1 - (self.previousClose / self.bid), 4)
 
