@@ -25,11 +25,25 @@ class StockApi:
 class Quote:
     def __init__(self, **entries):
         self.__dict__.update(entries)
-        self.bid = self.bid if self.bid != None else self.regularMarketPrice
+        if not hasattr(self, 'bid') or self.bid is None:
+            if hasattr(self, 'regularMarketPrice') and self.regularMarketPrice != None:
+                self.bid = self.regularMarketPrice
+            else:
+                self.bid = 0
         if not hasattr(self, 'name') or self.name is None:
-            self.name = self.longName if self.longName != None else self.shortName
+            if hasattr(self, 'longName') and self.longName != None:
+                self.name = self.longName
+            elif hasattr(self, 'shortName') and self.shortName != None:
+                self.name = self.shortName
+            else:
+                self.name = ""
         if not hasattr(self, 'description') or self.description is None:
-            self.description = self.longBusinessSummary if self.longBusinessSummary != None else self.shortBusinessSummary
+            if hasattr(self, 'longBusinessSummary') and self.longBusinessSummary != None:
+                self.description = self.longBusinessSummary
+            elif hasattr(self, 'shortBusinessSummary') and self.shortBusinessSummary != None:
+                self.description = self.shortBusinessSummary
+            else:
+                self.description = ""
         self.gain = self.bid - self.previousClose
         self.gainPercent = round(1 - (self.previousClose / self.bid), 4)
 
