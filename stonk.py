@@ -4,28 +4,13 @@ import discord
 from discord.ext import commands
 from async_timeout import timeout
 from stockapi import StockApi
-
+from watchlist import WatchList
 class Stonk(commands.Cog):
 
     def __init__(self, client):
         self.name = "Stonk"
         self.client = client
-        self.channels = []
         self.api = StockApi()
-
-    @commands.command()
-    async def stonk(self, ctx):
-        self.channels.append(ctx.channel.id)
-        await ctx.send("Now stonking in {}".format(ctx.channel.name))
-
-    @commands.command()
-    async def list(self, ctx):
-        channelNames = []
-        for cId in self.channels:
-            channel = await self.client.fetch_channel(cId)
-            channelNames.append(channel.name)
-
-        await ctx.send("Currently stonking in: {}".format(", ".join(channelNames)))
 
     @commands.command(aliases=["ticker"])
     async def quote(self, ctx, *stonkSymbols):
@@ -36,6 +21,99 @@ class Stonk(commands.Cog):
                 await ctx.send("Unable to find symbol: {}".format(sym))
             else:
                 await ctx.send(embed=self.createQuoteEmbed(quotes[sym]))
+
+    @commands.command()
+    async def watch(self, ctx, *, args):
+        arguments = args.split()
+        if (len(arguments) > 0):
+            action = arguments[0].strip().lower()
+        else:
+            await ctx.send("An action or name required!")
+            return
+
+        if (len(arguments) > 1):
+            name = arguments[1].strip().lower()
+        else:
+            name = action
+
+        stonkSymbols = []
+        if (len(arguments) > 2):
+            for i in range(2, len(arguments)):
+                stonkSymbols.append(arguments[i])
+
+        #add
+        if (action == "add"):
+            watchList = WatchList.get(ctx.channel.id, name)
+            if watchList != None:
+                await ctx.send("Watchlist **{}** already exists.".format(name))
+            else:
+                quotes = self.api.getQuotes(stonkSymbols)
+                safeQuotes = {}
+                for sym in quotes:
+                    if (quotes[sym] == None):
+                        await ctx.send("Unable to find symbol: **{}**".format(sym))
+                    else:
+                        safeQuotes[sym] = quotes[sym]
+                if (len(safeQuotes) > 0):
+                    watchList = WatchList(ctx.channel.id, name, list(safeQuotes.keys()))
+                    watchList.persist()
+                    await ctx.send("Watchlist **{}** has been created.".format(name))
+                else:
+                    await ctx.send("No symbols to watch!")
+        #update
+        if (action == "edit"):
+
+            watchList = WatchList.get(ctx.channel.id, name)
+            if watchList is None:
+                await ctx.send("Watchlist **{}** does not exists.".format(name))
+            else:
+                quotes = self.api.getQuotes(stonkSymbols)
+                safeQuotes = {}
+                for sym in quotes:
+                    if (quotes[sym] == None):
+                        await ctx.send("Unable to find symbol: **{}**".format(sym))
+                    else:
+                        safeQuotes[sym] = quotes[sym]
+                if (len(safeQuotes) > 0):
+                    watchList.symbols = list(safeQuotes.keys())
+                    watchList.persist(True)
+                    await ctx.send("Watchlist **{}** has been updated.".format(name))
+                else:
+                    await ctx.send("No symbols to watch!")
+        
+        #delete
+        elif (action == "del" or action == "delete"):
+            WatchList.delete(name)
+            await ctx.send("Deleted {}".format(name))
+
+        #list
+        elif (action == "list"):
+            watchlists = WatchList.getAll(ctx.channel.id)
+            names = []
+            if len(watchlists) > 0:
+                for watch in watchlists:
+                    names.append(watch.name)
+                await ctx.send("Available watchlists: **{}**".format(', '.join(names)))
+            else:
+                await ctx.send("No available watchlists.")
+        #help
+        elif (action == "help"):
+            await ctx.send("Ex: **$watch (action) (name) (symbols)**")
+            await ctx.send("Actions: list, add, edit, del")
+            await ctx.send("Example: **$watch add meme AMC GME DOGE-USD**")
+            await ctx.send("To show a watchlist, simply do **$watch meme**")
+
+        #display
+        else:
+            watchList = WatchList.get(ctx.channel.id, name)
+            if watchList is None:
+                await ctx.send("Watchlist **{}** does not exist.".format(name))
+            else:
+                quotes = self.api.getQuotes(watchList.symbols)
+
+                for sym in quotes:
+                    await ctx.send(embed=self.createQuoteEmbed(quotes[sym]))
+
 
     def createQuoteEmbed(self, quote):
         gain_sym = "+" if quote.gain > 0 else "-"

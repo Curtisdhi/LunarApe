@@ -44,6 +44,18 @@ class Quote:
                 self.description = self.shortBusinessSummary
             else:
                 self.description = ""
+                
+        if not hasattr(self, 'previousClose') or self.previousClose is None:
+            self.previousClose = 0
+        if not hasattr(self, 'regularMarketOpen') or self.regularMarketOpen is None:
+            self.regularMarketOpen = 0
+        if not hasattr(self, 'dayHigh') or self.dayHigh is None:
+            self.dayHigh = 0
+        if not hasattr(self, 'dayLow') or self.dayLow is None:
+            self.dayLow = 0
+
         self.gain = self.bid - self.previousClose
-        self.gainPercent = round(1 - (self.previousClose / self.bid), 4)
+        self.gainPercent = 0
+        if (self.bid != 0 and self.previousClose != 0):
+            self.gainPercent = round(1 - (self.previousClose / self.bid), 4)
 

@@ -1,3 +1,4 @@
 .env
 apebot-env/
 __pycache__/
+stonks.db
