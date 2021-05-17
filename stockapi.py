@@ -57,5 +57,5 @@ class Quote:
         self.gain = self.bid - self.previousClose
         self.gainPercent = 0
         if (self.bid != 0 and self.previousClose != 0):
-            self.gainPercent = round(1 - (self.previousClose / self.bid), 4)
+            self.gainPercent = round((self.bid - self.previousClose) / self.previousClose, 4)
 

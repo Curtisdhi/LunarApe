@@ -12,7 +12,7 @@ class Stonk(commands.Cog):
         self.client = client
         self.api = StockApi()
 
-    @commands.command(aliases=["ticker"])
+    @commands.command(aliases=["ticker", "t"])
     async def quote(self, ctx, *stonkSymbols):
         quotes = self.api.getQuotes(stonkSymbols)
 
@@ -22,7 +22,27 @@ class Stonk(commands.Cog):
             else:
                 await ctx.send(embed=self.createQuoteEmbed(quotes[sym]))
 
-    @commands.command()
+    @commands.command(aliases=["g"])
+    async def gain(self, ctx, *stonkSymbols):
+        quotes = self.api.getQuotes(stonkSymbols)
+
+        hasQuote = False
+        gains = []
+        notFoundSymbols = []
+        for sym in quotes:
+            if (quotes[sym] == None):
+                notFoundSymbols.append(sym)
+            else:
+                hasQuote = True
+                gains.append(self.createGainMessage(quotes[sym]))
+
+        if len(notFoundSymbols) > 0:
+            await ctx.send("Unable to find symbol(s): {}".format(', '.join(notFoundSymbols)))    
+        if hasQuote:
+            await ctx.send("```diff\n{}\n```".format('\n'.join(gains)))
+             
+
+    @commands.command(aliases=["w"])
     async def watch(self, ctx, *, args):
         arguments = args.split()
         if (len(arguments) > 0):
@@ -99,12 +119,12 @@ class Stonk(commands.Cog):
         #help
         elif (action == "help"):
             await ctx.send("Ex: **$watch (action) (name) (symbols)**")
-            await ctx.send("Actions: list, add, edit, del")
+            await ctx.send("Actions: list, add, edit, del, detail")
             await ctx.send("Example: **$watch add meme AMC GME DOGE-USD**")
             await ctx.send("To show a watchlist, simply do **$watch meme**")
 
-        #display
-        else:
+        #display full detail
+        elif (action == "detail" or action == "d"):
             watchList = WatchList.get(ctx.channel.id, name)
             if watchList is None:
                 await ctx.send("Watchlist **{}** does not exist.".format(name))
@@ -113,7 +133,17 @@ class Stonk(commands.Cog):
 
                 for sym in quotes:
                     await ctx.send(embed=self.createQuoteEmbed(quotes[sym]))
-
+        #short display
+        else:
+            watchList = WatchList.get(ctx.channel.id, name)
+            if watchList is None:
+                await ctx.send("Watchlist **{}** does not exist.".format(name))
+            else:
+                gains = []
+                quotes = self.api.getQuotes(watchList.symbols)
+                for sym in quotes:
+                    gains.append(self.createGainMessage(quotes[sym]))
+                await ctx.send("```diff\n{}\n```".format('\n'.join(gains)))
 
     def createQuoteEmbed(self, quote):
         gain_sym = "+" if quote.gain > 0 else "-"
@@ -142,3 +172,12 @@ class Stonk(commands.Cog):
             embed.add_field(name="Short Ratio", value="```diff\n{0:,.1f}%\n```".format(quote.shortRatio * 100),      inline=True)
 
         return embed
+
+    def createGainMessage(self, quote):
+        gains = []
+
+        gain_sym = "+" if quote.gain > 0 else "-"
+        width = 2 if (quote.bid > 1) else 6
+        return "{sym:*^20}\n{gain_sym}${gain:,.{width}f}  {gain_sym}{gain_percent:,.2f}%".format(
+            sym = " {} ".format(quote.symbol), gain = abs(quote.gain), gain_percent = abs(quote.gainPercent * 100), gain_sym = gain_sym, width = width
+        )
