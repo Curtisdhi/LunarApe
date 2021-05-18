@@ -1,5 +1,6 @@
 import os
 import sys
+import signal
 import asyncio
 import discord
 import sqlite3
@@ -18,6 +19,7 @@ def setupPersistence():
     con.close()
 
 
+
 load_dotenv()
 
 if len(sys.argv) > 1 and sys.argv[1].strip().lower() == 'prod':
@@ -29,6 +31,13 @@ setupPersistence()
 
 client = commands.Bot(command_prefix=commands.when_mentioned_or("$"), description='Apes to the moon!')
 
+#handles Ctrl+Z more cleanly
+def handler(signum, frame):
+    print('Apebot heading to the moon!')
+    client.close()
+    exit()
+
+signal.signal(signal.SIGTSTP, handler)
 
 @client.event
 async def on_ready():

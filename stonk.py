@@ -146,7 +146,7 @@ class Stonk(commands.Cog):
                 await ctx.send("```diff\n{}\n```".format('\n'.join(gains)))
 
     def createQuoteEmbed(self, quote):
-        gain_sym = "+" if quote.gain > 0 else "-"
+        gain_sym = self.getGainSym(quote.gain)
 
         embed = discord.Embed(
             title=quote.symbol +" - "+ quote.name,
@@ -176,8 +176,16 @@ class Stonk(commands.Cog):
     def createGainMessage(self, quote):
         gains = []
 
-        gain_sym = "+" if quote.gain > 0 else "-"
+        gain_sym = self.getGainSym(quote.gain)
+
         width = 2 if (quote.bid > 1) else 6
         return "{sym:*^20}\n{gain_sym}${gain:,.{width}f}  {gain_sym}{gain_percent:,.2f}%".format(
             sym = " {} ".format(quote.symbol), gain = abs(quote.gain), gain_percent = abs(quote.gainPercent * 100), gain_sym = gain_sym, width = width
         )
+
+    def getGainSym(self, gain):
+        if gain > 0:
+            return "+"
+        elif gain < 0:
+            return "-"
+        return ""

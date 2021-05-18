@@ -15,6 +15,7 @@ class StockApi:
         for q in quotes:
             q = q.strip().upper()
             ticker = yf.Ticker(q, self._session)
+            #print(ticker.info)
             if ticker.info != None and 'symbol' in ticker.info:
                 data[q] = Quote(**ticker.info)
             else:
@@ -25,7 +26,7 @@ class StockApi:
 class Quote:
     def __init__(self, **entries):
         self.__dict__.update(entries)
-        if not hasattr(self, 'bid') or self.bid is None:
+        if not hasattr(self, 'bid') or self.bid is None or self.bid == 0:
             if hasattr(self, 'regularMarketPrice') and self.regularMarketPrice != None:
                 self.bid = self.regularMarketPrice
             else:
